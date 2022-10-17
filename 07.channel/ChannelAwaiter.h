@@ -14,10 +14,10 @@ template<typename ValueType>
 struct WriterAwaiter {
   Channel<ValueType> *channel;
   AbstractExecutor *executor = nullptr;
-  ValueType _value;
   std::coroutine_handle<> handle;
+  ValueType* _value = (ValueType *)malloc(PADDINGWIDTH * SIZE * sizeof(ValueType));
 
-  WriterAwaiter(Channel<ValueType> *channel, ValueType value)
+  WriterAwaiter(Channel<ValueType> *channel, ValueType value, size_t idx)
       : channel(channel), _value(value) {}
 
   WriterAwaiter(WriterAwaiter &&other) noexcept

@@ -7,5 +7,9 @@
 
 #define __cpp_lib_coroutine
 #include <coroutine>
-
+#define ITERATION 1000000
+#define SIZE 1024
+#define RTHREADS 4
+#define WTHREADS 4
+#define PADDINGWIDTH 64
 #endif //CPPCOROUTINES_TASKS_04_TASK_COROUTINE_COMMON_H_
