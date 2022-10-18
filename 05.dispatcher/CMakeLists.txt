@@ -3,6 +3,6 @@ project(CppCoroutines-Tasks)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable("coroutine-task"
+add_executable("coroutine-task5"
         main.cpp
         io_utils.cpp)

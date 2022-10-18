@@ -5,31 +5,28 @@
 #ifndef CPPCOROUTINES_TASKS_07_CHANNEL_CHANNELAWAITER_H_
 #define CPPCOROUTINES_TASKS_07_CHANNEL_CHANNELAWAITER_H_
 
+#include "Executor.h"
 #include "coroutine_common.h"
+#include <utility>
 
-template<typename ValueType>
-struct Channel;
+template <typename ValueType> struct Channel;
 
-template<typename ValueType>
-struct WriterAwaiter {
+template <typename ValueType> struct WriterAwaiter {
   Channel<ValueType> *channel;
   AbstractExecutor *executor = nullptr;
+  ValueType _value;
   std::coroutine_handle<> handle;
-  ValueType* _value = (ValueType *)malloc(PADDINGWIDTH * SIZE * sizeof(ValueType));
+  int index;
 
-  WriterAwaiter(Channel<ValueType> *channel, ValueType value, size_t idx)
-      : channel(channel), _value(value) {}
+  WriterAwaiter(Channel<ValueType> *channel, ValueType value, int index)
+      : channel(channel), _value(value), index(index) {}
 
   WriterAwaiter(WriterAwaiter &&other) noexcept
       : channel(std::exchange(other.channel, nullptr)),
-        executor(std::exchange(other.executor, nullptr)),
-        _value(other._value),
+        executor(std::exchange(other.executor, nullptr)), _value(other._value),
         handle(other.handle) {}
 
-
-  bool await_ready() {
-    return false;
-  }
+  bool await_ready() { return false; }
 
   auto await_suspend(std::coroutine_handle<> coroutine_handle) {
     this->handle = coroutine_handle;
@@ -50,26 +47,26 @@ struct WriterAwaiter {
   }
 
   ~WriterAwaiter() {
-    if (channel) channel->remove_writer(this);
+    if (channel)
+      channel->remove_writer(this);
   }
 };
 
-template<typename ValueType>
-struct ReaderAwaiter {
+template <typename ValueType> struct ReaderAwaiter {
   Channel<ValueType> *channel;
   AbstractExecutor *executor = nullptr;
   ValueType _value;
   ValueType *p_value = nullptr;
   std::coroutine_handle<> handle;
+  int index;
 
-  explicit ReaderAwaiter(Channel<ValueType> *channel) : channel(channel) {}
+  explicit ReaderAwaiter(Channel<ValueType> *channel, int index)
+      : channel(channel), index(index) {}
 
   ReaderAwaiter(ReaderAwaiter &&other) noexcept
       : channel(std::exchange(other.channel, nullptr)),
-        executor(std::exchange(other.executor, nullptr)),
-        _value(other._value),
-        p_value(std::exchange(other.p_value, nullptr)),
-        handle(other.handle) {}
+        executor(std::exchange(other.executor, nullptr)), _value(other._value),
+        p_value(std::exchange(other.p_value, nullptr)), handle(other.handle) {}
 
   bool await_ready() { return false; }
 
@@ -85,8 +82,9 @@ struct ReaderAwaiter {
     return _value;
   }
 
-  void resume(ValueType value) {
+  void resume(ValueType value, int index) {
     this->_value = value;
+    this->index = index;
     if (p_value) {
       *p_value = value;
     }
@@ -102,8 +100,9 @@ struct ReaderAwaiter {
   }
 
   ~ReaderAwaiter() {
-    if (channel) channel->remove_reader(this);
+    if (channel)
+      channel->remove_reader(this);
   }
 };
 
-#endif //CPPCOROUTINES_TASKS_07_CHANNEL_CHANNELAWAITER_H_
+#endif // CPPCOROUTINES_TASKS_07_CHANNEL_CHANNELAWAITER_H_
